@@ -1,5 +1,6 @@
 // 完整升级版：支持多语言显示名 + 根据当前界面语言排序
 import 'language_variants.dart';
+import 'scripts.dart';
 
 class LanguageConfig {
   final String code;
@@ -7,6 +8,8 @@ class LanguageConfig {
   final Map<String, String> names;
   final Map<String, String> sortKeys;
   final List<String> scriptCodes;
+  final Map<String, Map<String, String>> scriptNames;
+
   /// 方言或语言变体代码。
   final List<String> variantCodes;
 
@@ -22,10 +25,10 @@ class LanguageConfig {
     required this.names,
     required this.sortKeys,
     this.scriptCodes = const [],
+    this.scriptNames = const {},
     this.variantCodes = const [],
     this.allowDirectSelection = true,
     this.defaultVariantCode,
-    
   });
 
   bool get hasVariants {
@@ -84,6 +87,26 @@ class LanguageConfig {
   String nameOf(String uiLangCode) {
     final uiCode = _normalizeUiCode(uiLangCode);
     return names[uiCode] ?? names['en'] ?? names['zh'] ?? code;
+  }
+
+  String scriptNameOf(String scriptCode, String uiLanguageCode) {
+    final normalizedUiCode = uiLanguageCode
+        .trim()
+        .toLowerCase()
+        .split(RegExp(r'[-_]'))
+        .first;
+
+    final entry = scriptNames[scriptCode];
+
+    if (entry != null) {
+      return entry[normalizedUiCode] ??
+          entry['en'] ??
+          entry['zh'] ??
+          scriptCode;
+    }
+
+    return ScriptConfig.findByCode(scriptCode)?.nameOf(normalizedUiCode) ??
+        scriptCode;
   }
 
   String sortKeyOf(String uiLangCode) {
@@ -1927,7 +1950,7 @@ class LanguageConfig {
       code: 'vi',
       flag: '🇻🇳',
       names: {
-        'zh': '越南语-国语字',
+        'zh': '越南语',
         'en': 'Vietnamese',
         'ms': 'Bahasa Vietnam',
         'vi': 'Tiếng Việt',
@@ -1940,10 +1963,23 @@ class LanguageConfig {
         'vi': 'viet',
         'ru': 'вьетнамский',
       },
-      scriptCodes: [
-        'Latn',
-        'Hnom',
-      ],
+      scriptCodes: ['Latn', 'Hnom'],
+      scriptNames: {
+        'Latn': {
+          'zh': '国语字',
+          'en': 'Quốc Ngữ',
+          'ms': 'Quốc Ngữ',
+          'vi': 'Chữ Quốc ngữ',
+          'ru': 'Куокнгы',
+        },
+        'Hnom': {
+          'zh': '喃字',
+          'en': 'Chữ Nôm',
+          'ms': 'Aksara Nôm',
+          'vi': 'Chữ Nôm',
+          'ru': 'Тьы Ном',
+        },
+      },
     ),
     //Z
     LanguageConfig(
